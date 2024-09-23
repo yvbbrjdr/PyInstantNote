@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import code
 import io
 import sys
@@ -45,11 +46,22 @@ def execute_code_lines(code_lines):
 class Notepad(App):
     CSS_PATH = 'notepad.tcss'
 
+    BINDINGS = [('ctrl+s', 'save', 'Save')]
+
+    def __init__(self, filename):
+        super().__init__()
+        self.filename = filename
+        if filename:
+            with open(filename, 'r') as f:
+                self.text = f.read()
+        else:
+            self.text = ''
+
     def compose(self):
         yield Header()
         yield Footer()
         yield Horizontal(
-            TextArea(id='main_text_area', show_line_numbers=True, language='python'),
+            TextArea(id='main_text_area', show_line_numbers=True, language='python', text=self.text),
             TextArea(id='output_text_area', soft_wrap=False, read_only=True)
         )
 
@@ -70,5 +82,17 @@ class Notepad(App):
         output_text_area = self.query_one('#output_text_area')
         output_text_area.scroll_to(event.control.scroll_x, event.control.scroll_y, animate=False)
 
+    def action_save(self):
+        if self.filename:
+            with open(self.filename, 'w') as f:
+                f.write(self.query_one('#main_text_area').text)
+
+def main(filename):
+    app = Notepad(filename)
+    app.run()
+
 if __name__ == '__main__':
-    Notepad().run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', nargs='?', type=str, default=None)
+    args = parser.parse_args()
+    main(args.filename)
