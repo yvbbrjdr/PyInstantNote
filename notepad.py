@@ -21,17 +21,21 @@ def execute_code_lines(code_lines):
     code_lines_merged = []
     i = 0
     while i < len(code_lines):
-        line = code_lines[i]
-        i += 1
-        while i < len(code_lines) and (
-            code_lines[i].startswith(' ') or
-            code_lines[i].startswith('\t') or
-            code_lines[i].startswith('#') or
-            code_lines[i] == ''
+        j = i + 1
+        while j < len(code_lines) and (
+            code_lines[j].startswith(' ') or
+            code_lines[j].startswith('\t') or
+            code_lines[j].startswith('#') or
+            code_lines[j] == ''
         ):
-            line += '\n' + code_lines[i]
-            i += 1
-        code_lines_merged.append(line)
+            j += 1
+        while j > i + 1 and (
+            code_lines[j - 1].startswith('#') or
+            code_lines[j - 1].strip() == ''
+        ):
+            j -= 1
+        code_lines_merged.append('\n'.join(code_lines[i:j]))
+        i = j
     code_lines = code_lines_merged
 
     interpreter = code.InteractiveInterpreter()
