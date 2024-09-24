@@ -67,6 +67,7 @@ class Notepad(App):
                 self.text = ''
         else:
             self.text = ''
+        self.output = self.execute_code(self.text)
         try:
             lexer = guess_lexer_for_filename(self.filename, self.text)
             self.detected_language = lexer.name.lower()
@@ -80,19 +81,22 @@ class Notepad(App):
         yield Footer()
         yield Horizontal(
             TextArea(id='main_text_area', show_line_numbers=True, language=self.detected_language, text=self.text, tab_behavior='indent'),
-            TextArea(id='output_text_area', soft_wrap=False, read_only=True)
+            TextArea(id='output_text_area', soft_wrap=False, read_only=True, text=self.output)
         )
 
-    @on(TextArea.Changed, '#main_text_area')
-    def execute_code(self, event: TextArea.Changed):
-        output_text_area = self.query_one('#output_text_area')
-        code_lines = event.control.text.split('\n')
+    def execute_code(self, code):
+        code_lines = code.split('\n')
         output_lines = execute_code_lines(code_lines)
         output_lines = [
             '' if error_output else output.replace('\n', ' ')
             for output, error_output in output_lines
         ]
-        output_text_area.text = '\n'.join(output_lines)
+        return '\n'.join(output_lines)
+
+    @on(TextArea.Changed, '#main_text_area')
+    def on_text_change(self, event: TextArea.Changed):
+        output_text_area = self.query_one('#output_text_area')
+        output_text_area.text = self.execute_code(event.control.text)
         output_text_area.scroll_to(event.control.scroll_x, event.control.scroll_y, animate=False)
 
     @on(TextArea.SelectionChanged, '#main_text_area')
