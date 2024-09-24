@@ -61,7 +61,11 @@ def execute_code_lines(code_lines):
     return ret
 
 class Notepad(App):
-    CSS_PATH = 'notepad.tcss'
+    CSS = """
+#output_text_area {
+  width: 25%;
+}
+"""
 
     BINDINGS = [
         ('ctrl+s', 'save', 'Save'),
