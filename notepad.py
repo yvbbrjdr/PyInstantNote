@@ -23,7 +23,12 @@ def execute_code_lines(code_lines):
     while i < len(code_lines):
         line = code_lines[i]
         i += 1
-        while i < len(code_lines) and (code_lines[i].startswith(' ') or code_lines[i].startswith('\t')):
+        while i < len(code_lines) and (
+            code_lines[i].startswith(' ') or
+            code_lines[i].startswith('\t') or
+            code_lines[i].startswith('#') or
+            code_lines[i] == ''
+        ):
             line += '\n' + code_lines[i]
             i += 1
         code_lines_merged.append(line)
