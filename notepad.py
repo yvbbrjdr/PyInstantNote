@@ -5,9 +5,17 @@ import code
 import io
 import sys
 
+from pygments.lexers import guess_lexer_for_filename
 from textual.app import App, on
 from textual.containers import Horizontal
 from textual.widgets import Footer, Header, TextArea
+
+TEXTUAL_LANGUAGES = [
+    'bash', 'css', 'go', 'html',
+    'java', 'javascript', 'json', 'kotlin',
+    'markdown', 'python', 'rust', 'regex',
+    'sql', 'toml', 'yaml'
+]
 
 def execute_code_lines(code_lines):
     code_lines_merged = []
@@ -52,16 +60,26 @@ class Notepad(App):
         super().__init__()
         self.filename = filename
         if filename:
-            with open(filename, 'r') as f:
-                self.text = f.read()
+            try:
+                with open(filename, 'r') as f:
+                    self.text = f.read()
+            except:
+                self.text = ''
         else:
             self.text = ''
+        try:
+            lexer = guess_lexer_for_filename(self.filename, self.text)
+            self.detected_language = lexer.name.lower()
+            if self.detected_language not in TEXTUAL_LANGUAGES:
+                self.detected_language = 'markdown'
+        except:
+            self.detected_language = 'markdown'
 
     def compose(self):
         yield Header()
         yield Footer()
         yield Horizontal(
-            TextArea(id='main_text_area', show_line_numbers=True, language='python', text=self.text),
+            TextArea(id='main_text_area', show_line_numbers=True, language=self.detected_language, text=self.text, tab_behavior='indent'),
             TextArea(id='output_text_area', soft_wrap=False, read_only=True)
         )
 
