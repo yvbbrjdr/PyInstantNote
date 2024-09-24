@@ -63,10 +63,14 @@ def execute_code_lines(code_lines):
 class Notepad(App):
     CSS_PATH = 'notepad.tcss'
 
-    BINDINGS = [('ctrl+s', 'save', 'Save')]
+    BINDINGS = [
+        ('ctrl+s', 'save', 'Save'),
+        ('ctrl+g', 'debug', 'Debug')
+    ]
 
     def __init__(self, filename):
         super().__init__()
+        self.debug_mode = False
         self.filename = filename
         if filename:
             try:
@@ -93,11 +97,16 @@ class Notepad(App):
             TextArea(id='output_text_area', soft_wrap=False, read_only=True, text=self.output)
         )
 
+    def on_mount(self):
+        if self.filename:
+            self.sub_title = self.filename
+
     def execute_code(self, code):
         code_lines = code.split('\n')
         output_lines = execute_code_lines(code_lines)
         output_lines = [
-            '' if error_output else output.replace('\n', ' ')
+            (error_output.replace('\n', ' ') if self.debug_mode else '')
+                if error_output else output.replace('\n', ' ')
             for output, error_output in output_lines
         ]
         return '\n'.join(output_lines)
@@ -107,6 +116,8 @@ class Notepad(App):
         output_text_area = self.query_one('#output_text_area')
         output_text_area.text = self.execute_code(event.control.text)
         output_text_area.scroll_to(event.control.scroll_x, event.control.scroll_y, animate=False)
+        if self.filename:
+            self.sub_title = f'{self.filename}*'
 
     @on(TextArea.SelectionChanged, '#main_text_area')
     def on_cursor_change(self, event: TextArea.SelectionChanged):
@@ -117,6 +128,15 @@ class Notepad(App):
         if self.filename:
             with open(self.filename, 'w') as f:
                 f.write(self.query_one('#main_text_area').text)
+            self.sub_title = self.filename
+        else:
+            self.sub_title = 'Not Saved'
+
+    def action_debug(self):
+        self.debug_mode = not self.debug_mode
+        main_text_area = self.query_one('#main_text_area')
+        output_text_area = self.query_one('#output_text_area')
+        output_text_area.text = self.execute_code(main_text_area.text)
 
 def main(filename):
     app = Notepad(filename)
